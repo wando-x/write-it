@@ -1,0 +1,90 @@
+{
+  "name": "write-it",
+  "productName": "Write It",
+  "version": "1.0.0",
+  "description": "Write It: procesador de textos de escritorio con dictado por voz e IA local. Open source.",
+  "main": "main.js",
+  "author": "Fabrizzio",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "electron . --selftest",
+    "test:ai": "electron scripts/ai-test.js",
+    "icon": "electron scripts/make-icon.js",
+    "icons": "node scripts/build-icons.js",
+    "dist": "electron-builder --win"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "4.3.0",
+    "html-to-docx": "1.8.0",
+    "mammoth": "1.13.0",
+    "node-llama-cpp": "3.22.1"
+  },
+  "devDependencies": {
+    "@fluentui/svg-icons": "^1.1.344",
+    "electron": "44.9.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.fabrizzio.writeit",
+    "productName": "Write It",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "ai-engine.js",
+      "src/**/*",
+      "build/icon.png",
+      "package.json",
+      "!node_modules/@node-llama-cpp/win-x64-cuda/**",
+      "!node_modules/@node-llama-cpp/win-x64-cuda-ext/**",
+      "!node_modules/@node-llama-cpp/win-arm64/**",
+      "!node_modules/@node-llama-cpp/linux-*/**",
+      "!node_modules/@node-llama-cpp/mac-*/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/darwin/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/linux/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/win32/arm64/**",
+      "!node_modules/node-llama-cpp/llama/gitRelease.bundle",
+      "!**/*.map",
+      "!**/*.d.ts",
+      "!**/*.md"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "wit",
+        "name": "Documento de Write It",
+        "description": "Documento de Write It",
+        "icon": "build/icon.ico",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Write It",
+      "artifactName": "Write-It-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Write-It-Portable-${version}.${ext}"
+    },
+    "asarUnpack": [
+      "node_modules/node-llama-cpp/**",
+      "node_modules/@node-llama-cpp/**",
+      "node_modules/onnxruntime-node/**",
+      "node_modules/sharp/**",
+      "node_modules/@img/**"
+    ]
+  }
+}

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob: file: https: http:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; frame-src file:; object-src file:; media-src 'self' data: blob:">
+  <title>Write It</title>
+  <link rel="stylesheet" href="styles.css">
+  <style id="page-style"></style>
+</head>
+<body>
+  <header id="titlebar">
+    <div class="tb-logo" title="Write It"><span>W</span></div>
+    <div class="qat" id="qat"></div>
+    <div class="tb-center">
+      <div class="tb-title"><span id="doc-title">Documento1</span><span id="save-state" class="tb-state">Guardado</span></div>
+    </div>
+    <div class="tb-search">
+      <span class="tb-search-icon" data-icon="search"></span>
+      <input id="tell-me" type="text" placeholder="Buscar comandos (Alt+Q)" autocomplete="off" spellcheck="false">
+      <div id="tell-me-results" class="popup-list" hidden></div>
+    </div>
+    <div class="tb-user" id="tb-user" title="Opciones"></div>
+    <div class="tb-overlay-space"></div>
+  </header>
+
+  <nav id="tabs" role="tablist"></nav>
+  <section id="ribbon" role="toolbar"></section>
+
+  <main id="workspace">
+    <aside id="navpane" class="sidepane" hidden>
+      <div class="pane-head"><span>Navegación</span><button class="icon-btn" data-close-pane="navpane" title="Cerrar" data-icon="close"></button></div>
+      <div class="pane-search"><input id="nav-search" type="search" placeholder="Buscar en el documento" spellcheck="false"></div>
+      <div class="pane-tabs"><button class="active" data-navtab="headings">Títulos</button><button data-navtab="results">Resultados</button></div>
+      <div id="nav-list" class="pane-body"></div>
+    </aside>
+
+    <div id="scroller">
+      <div id="ruler-wrap"><div id="ruler"></div></div>
+      <div id="canvas">
+        <div id="sheet">
+          <div id="page-layer" aria-hidden="true"></div>
+          <div id="doc-header" class="hf" contenteditable="plaintext-only" spellcheck="true" data-placeholder="Encabezado — escribe aquí"></div>
+          <div id="doc" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Documento"></div>
+          <div id="doc-footer" class="hf" contenteditable="plaintext-only" spellcheck="true" data-placeholder="Pie de página — escribe aquí"></div>
+        </div>
+      </div>
+    </div>
+
+    <aside id="commentpane" class="sidepane right" hidden>
+      <div class="pane-head"><span>Comentarios</span><button class="icon-btn" data-close-pane="commentpane" title="Cerrar" data-icon="close"></button></div>
+      <div id="comment-list" class="pane-body"></div>
+    </aside>
+  </main>
+
+  <footer id="statusbar">
+    <div class="sb-left">
+      <button id="sb-page" class="sb-item">Página 1 de 1</button>
+      <button id="sb-words" class="sb-item">0 palabras</button>
+      <button id="sb-lang" class="sb-item" title="Idioma de corrección"><span data-icon="proofing"></span> Español</button>
+      <span id="sb-msg" class="sb-item muted"></span>
+    </div>
+    <div class="sb-right">
+      <button class="sb-view" id="sb-focus" title="Modo enfoque" data-icon="focus"></button>
+      <button class="sb-view" id="sb-read" title="Modo de lectura" data-icon="read"></button>
+      <button class="sb-view active" id="sb-print" title="Diseño de impresión" data-icon="doc"></button>
+      <button class="sb-zoom-btn" id="zoom-out" title="Alejar">−</button>
+      <input id="zoom-slider" type="range" min="25" max="300" step="5" value="100" aria-label="Zoom">
+      <button class="sb-zoom-btn" id="zoom-in" title="Acercar">+</button>
+      <button id="zoom-label" class="sb-item" title="Zoom">100 %</button>
+    </div>
+  </footer>
+
+  <div id="backstage" hidden></div>
+  <div id="find-panel" hidden></div>
+  <div id="img-handle" hidden><span class="h-se"></span></div>
+  <div id="popup-root"></div>
+  <div id="modal-root"></div>
+  <div id="toast" role="status"></div>
+  <div id="print-watermark" aria-hidden="true"></div>
+
+  <script src="icons.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/files.js"></script>
+  <script src="js/features.js"></script>
+  <script src="js/commands.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/backstage.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="selftest.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
