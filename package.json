@@ -50,7 +50,11 @@
       "!node_modules/node-llama-cpp/llama/gitRelease.bundle",
       "!**/*.map",
       "!**/*.d.ts",
-      "!**/*.md"
+      "!**/*.md",
+      "!node_modules/onnxruntime-web/**",
+      "!node_modules/@huggingface/transformers/dist/transformers.{js,min.js,web.js,web.min.js}",
+      "!node_modules/@huggingface/transformers/dist/*.wasm",
+      "!node_modules/@huggingface/transformers/dist/ort-wasm*"
     ],
     "fileAssociations": [
       {

@@ -18,7 +18,7 @@ async function init() {
   bindEditorEvents();
   bindGlobalEvents();
   applyDoc();
-  UI.setZoom(100);
+  UI.setZoom(Settings.zoom || UI.comfortZoom(), { save: false });
   UI.updateTitle();
   Files.pushState();
   focusDoc();
@@ -127,7 +127,11 @@ function bindEditorEvents() {
 
   $('#img-handle .h-se').addEventListener('mousedown', (e) => Images.startResize(e));
   $('#scroller').addEventListener('scroll', () => Images.reposition(), { passive: true });
-  window.addEventListener('resize', debounce(() => { Images.reposition(); scheduleLayout(); }, 100));
+  window.addEventListener('resize', debounce(() => {
+    // mientras no elijas un zoom, se adapta al tamaño de la ventana (p. ej. al maximizarla)
+    if (!Settings.zoom) UI.setZoom(UI.comfortZoom(), { save: false });
+    Images.reposition(); scheduleLayout();
+  }, 100));
 }
 
 const navSoon = debounce(() => Nav.render(), 250);

@@ -140,7 +140,9 @@ const History = {
     if (this.stack[this.idx] && this.stack[this.idx].html === html) { this.stack[this.idx].sel = getSelOffsets(); return; }
     this.stack = this.stack.slice(0, this.idx + 1);
     this.stack.push({ html, sel: getSelOffsets() });
-    if (this.stack.length > this.max) this.stack.shift();
+    // límite de pasos y de memoria (los documentos con imágenes pesan mucho)
+    let bytes = this.stack.reduce((a, e) => a + e.html.length, 0);
+    while (this.stack.length > 2 && (this.stack.length > this.max || bytes > 80e6)) bytes -= this.stack.shift().html.length;
     this.idx = this.stack.length - 1;
     UI.updateUndo();
   },
@@ -476,7 +478,6 @@ function computePages() {
   Layout.contentH = contentH;
   const dRect = d.getBoundingClientRect();
   const scale = d.offsetHeight ? dRect.height / d.offsetHeight : 1;
-  const relTop = (node) => (node.getBoundingClientRect().top - dRect.top) / scale;
   const boundaries = [];
   let pageStart = 0;
   let afterBreak = false;
@@ -522,7 +523,6 @@ function computePages() {
   Layout.boundaries = boundaries;
   Layout.pages = boundaries.length + 1;
   Layout.scale = scale;
-  void relTop;
 }
 
 function renderPages() {

@@ -17,6 +17,8 @@
 2. Descarga **`Write-It-Setup-1.0.1.exe`** (instalador) o **`Write-It-Portable-1.0.1.exe`** (no necesita instalación, se abre directamente).
 3. Ábrelo. Si Windows muestra «Windows protegió su PC», pulsa **Más información → Ejecutar de todas formas**. Aparece porque la app no está firmada con un certificado de pago; el código es abierto y puedes revisarlo aquí mismo.
 
+> **Si Windows dice que «una directiva de Control de aplicaciones bloqueó este archivo»**, tu equipo tiene activado *Smart App Control*, que solo deja abrir programas firmados con certificado. Puedes desactivarlo en *Seguridad de Windows → Control de aplicaciones y navegador → Smart App Control* (ojo: después no se puede volver a activar sin reinstalar Windows), o ejecutar la app desde el código con `npm start` (ver más abajo).
+
 Requisitos: Windows 10 u 11 de 64 bits. Para la IA se recomiendan 8 GB de RAM (funciona con 4 GB usando los modelos ligeros).
 
 ## Qué puede hacer
@@ -53,21 +55,24 @@ Requisitos: Windows 10 u 11 de 64 bits. Para la IA se recomiendan 8 GB de RAM (f
 
 ## Dictado por voz
 
-Pulsa **Dictar** (pestaña Inicio o *Dictado e IA*, o `Ctrl+Mayús+D`) y habla. El texto aparece donde está el cursor cada vez que haces una pausa.
+Pulsa **Dictar** (pestaña Inicio o *AI*, o `Ctrl+Mayús+D`) y habla. El texto aparece donde está el cursor cada vez que haces una pausa.
 
 - Usa [Whisper](https://github.com/openai/whisper) de OpenAI, que funciona **sin internet** en tu computador.
 - La primera vez te pedirá descargar el modelo: **Whisper Small** (250 MB, recomendado) o **Whisper Base** (77 MB, para equipos modestos).
 - Idiomas: español, inglés, portugués, francés, italiano y alemán.
 
-## IA local: «Ordenar texto» y «Reformular»
+## IA local (pestaña AI)
 
-Pensada para textos dictados o escritos deprisa.
+Funciona dentro de tu computador: tus textos no salen de aquí. Antes de aplicar cualquier cambio verás una ventana de revisión (verde = añadido, rojo = quitado) para aceptarlo, pedir otra versión o descartarlo. Todo se puede deshacer con `Ctrl+Z`.
 
-- **Ordenar texto** (`Ctrl+Mayús+O`): pone puntos, comas, signos de interrogación, mayúsculas, tildes y separa en párrafos. **Nunca cambia tus palabras**: la app compara el resultado con tu texto original y, si la IA intenta cambiar, añadir o quitar alguna palabra, la descarta y restaura la tuya. Así siempre suena a ti.
-- **Reformular**: reescribe para que quede más claro manteniendo tu tono, sin añadir ideas.
-- Antes de aplicar nada verás los cambios marcados (verde = añadido, rojo = quitado) y podrás aceptarlos o descartarlos. También puedes deshacer con `Ctrl+Z`.
-- Funciona con [llama.cpp](https://github.com/ggml-org/llama.cpp) y el modelo **Qwen2.5 1,5B** (1,1 GB, recomendado) o **Qwen2.5 0,5B** (490 MB, el más ligero). Usa la tarjeta gráfica si tienes una compatible con Vulkan (**AMD Radeon**, NVIDIA o Intel) y, si no, el procesador: no hace falta una gráfica potente.
-- Se descarga una sola vez desde **Dictado e IA → Modelos de IA**. Es opcional: si no la descargas, el resto de la app funciona igual.
+- **Ordenar texto** (`Ctrl+Mayús+O`): pone puntos, comas, signos de interrogación, mayúsculas, tildes y separa en párrafos. **Nunca cambia tus palabras**: la app compara el resultado con tu texto y, si la IA intenta cambiar, añadir o quitar alguna palabra, la descarta y restaura la tuya. Así siempre suena a ti.
+- **Reescribir**: *Más pulido*, *Más profesional*, *Más casual*, *Más corto* o *Más claro*.
+- **Traducir**: a inglés, español, portugués, francés, italiano o alemán.
+- **Escribir por mí**: dile qué necesitas («un correo a mi profesor pidiendo una prórroga»), elige extensión y tono, y lo redacta donde está el cursor.
+
+Si no seleccionas nada, trabaja sobre todo el documento.
+
+Usa [llama.cpp](https://github.com/ggml-org/llama.cpp) con el modelo **Qwen2.5 1,5B** (1,1 GB, recomendado) o **Qwen2.5 0,5B** (490 MB, el más ligero). Usa la tarjeta gráfica si tienes una compatible con Vulkan (**AMD Radeon**, NVIDIA o Intel) y, si no, el procesador. Se descarga una sola vez desde **AI → Modelos de IA**; es opcional y el resto de la app funciona sin ella.
 
 ## Atajos de teclado
 

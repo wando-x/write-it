@@ -169,7 +169,7 @@ const Backstage = {
       const url = await api.printPreview();
       if (this.page !== 'print' || !this.isOpen()) return;
       preview.innerHTML = '';
-      preview.append(el('iframe', { src: url + '#toolbar=0&navpanes=0&view=FitH', title: 'Vista previa de impresión' }));
+      preview.append(el('iframe', { src: url + '#toolbar=0&navpanes=0&view=Fit', title: 'Vista previa de impresión' }));
     } catch (err) {
       preview.innerHTML = '';
       preview.append(el('div', { class: 'muted', text: 'No se pudo generar la vista previa. ' + err.message }));

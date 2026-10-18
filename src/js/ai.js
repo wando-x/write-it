@@ -184,6 +184,17 @@ const Dictation = {
 };
 
 // ---------- IA local ----------
+const AI_MODES = {
+  punctuate: { name: 'Ordenar texto', busy: 'Ordenando el texto…', review: 'Revisa los cambios' },
+  rewrite: { name: 'Más pulido', busy: 'Puliendo el texto…', review: 'Versión más pulida' },
+  professional: { name: 'Más profesional', busy: 'Haciéndolo más profesional…', review: 'Versión más profesional' },
+  casual: { name: 'Más casual', busy: 'Haciéndolo más casual…', review: 'Versión más casual' },
+  shorter: { name: 'Más corto', busy: 'Acortando el texto…', review: 'Versión más corta' },
+  clearer: { name: 'Más claro', busy: 'Aclarando el texto…', review: 'Versión más clara' },
+  translate: { name: 'Traducir', busy: 'Traduciendo…', review: 'Traducción' },
+};
+const TRANSLATE_LANGS = [['en', 'Inglés'], ['es', 'Español'], ['pt', 'Portugués'], ['fr', 'Francés'], ['it', 'Italiano'], ['de', 'Alemán']];
+
 const AI = {
   busy: false,
 
@@ -213,15 +224,16 @@ const AI = {
     return { blocks: Array.from(docEl().querySelectorAll(BLOCK_SEL)).filter(b => !b.querySelector(BLOCK_SEL) && !skip(b)), whole: true };
   },
 
-  async polish(mode) {
+  async polish(mode, opts = {}) {
     if (this.busy) return;
+    const info = AI_MODES[mode] || AI_MODES.punctuate;
     if (!(await this.ensureModel())) return;
     const t = this.targets();
     const items = t.partial ? [{ range: t.partial, text: t.partial.toString() }] : t.blocks.map(b => ({ block: b, text: b.innerText.replace(/\n+$/, '') }));
     const total = items.reduce((a, i) => a + countWords(i.text), 0);
     if (!total) { toast('No hay texto para ordenar'); return; }
     if (t.whole && total > 120) {
-      const ok = await UI.confirm(`No hay texto seleccionado, así que se revisará todo el documento (${total.toLocaleString('es')} palabras). Puede tardar un poco.\n\n¿Continuar?`, mode === 'rewrite' ? 'Reformular' : 'Ordenar texto', 'Continuar');
+      const ok = await UI.confirm(`No hay texto seleccionado, así que se revisará todo el documento (${total.toLocaleString('es')} palabras). Puede tardar un poco.\n\n¿Continuar?`, info.name, 'Continuar');
       if (!ok) return;
     }
     this.busy = true;
@@ -229,7 +241,7 @@ const AI = {
     const bar = el('div', { class: 'progress' }, [el('i')]);
     const label = el('div', { class: 'muted', text: 'Cargando la IA…' });
     UI.modal({
-      title: mode === 'rewrite' ? 'Reformulando…' : 'Ordenando el texto…', width: 420,
+      title: info.busy, width: 420,
       body: el('div', {}, [label, bar, el('p', { class: 'muted small', text: 'Todo se procesa en tu computador. Tus textos no salen de aquí.' })]),
       buttons: [{ label: 'Cancelar', action: () => { canceled = true; api.ai.cancel(); } }],
     });
@@ -245,9 +257,10 @@ const AI = {
           if (canceled) break;
           label.textContent = `Procesando… ${Math.min(100, Math.round(done / total * 100))} %`;
           bar.firstChild.style.width = Math.round(done / total * 100) + '%';
-          const res = await api.ai.generate({ mode, text: ch });
+          const res = await api.ai.generate({ mode, text: ch, ...opts });
           if (res.error) throw new Error(res.error);
           let txt = cleanModelOutput(res.text, ch);
+          if (mode !== 'punctuate') txt = capitalizeSentences(txt);
           if (mode === 'punctuate') {
             const p = keepOriginalWords(ch, txt);
             txt = p.text; fixedWords += p.restored;
@@ -266,25 +279,110 @@ const AI = {
     UI.closeModal();
     this.busy = false;
     if (canceled) { toast('Cancelado'); return; }
-    this.review(mode, items, results, fixedWords);
+    this.review(mode, items, results, fixedWords, opts);
   },
 
-  review(mode, items, results, fixedWords) {
+  review(mode, items, results, fixedWords, opts = {}) {
+    const info = AI_MODES[mode] || AI_MODES.punctuate;
     const before = items.map(i => i.text).join('\n\n');
     const after = results.join('\n\n');
     if (before.trim() === after.trim()) { toast('El texto ya estaba bien. No hubo cambios.'); return; }
-    const diff = el('div', { class: 'diff-view' });
-    diff.innerHTML = diffHtml(before, after);
-    const note = mode === 'punctuate'
-      ? `Solo se cambiaron puntuación, mayúsculas, tildes y párrafos. Tus palabras se mantienen igual.${fixedWords ? ` (La IA intentó cambiar ${fixedWords} palabra${fixedWords === 1 ? '' : 's'} y se restauraron las originales.)` : ''}`
-      : 'Revisa la propuesta. Puedes deshacerla después con Ctrl+Z.';
+    const view = el('div', { class: 'diff-view' });
+    let legend;
+    if (mode === 'translate') {
+      // en una traducción cambia todo: se muestra el resultado limpio
+      view.innerHTML = escapeHtml(after).replace(/\n/g, '<br>');
+      const lang = (TRANSLATE_LANGS.find(l => l[0] === opts.lang) || [, 'otro idioma'])[1].toLowerCase();
+      legend = el('div', { class: 'diff-legend' }, [el('span', { class: 'muted', text: `Traducción al ${lang}. Al aplicarla se reemplaza el texto original (puedes deshacer con Ctrl+Z).` })]);
+    } else {
+      view.innerHTML = diffHtml(before, after);
+      const note = mode === 'punctuate'
+        ? `Solo se cambiaron puntuación, mayúsculas, tildes y párrafos. Tus palabras se mantienen igual.${fixedWords ? ` (La IA intentó cambiar ${fixedWords} palabra${fixedWords === 1 ? '' : 's'} y se restauraron las originales.)` : ''}`
+        : 'Revisa la propuesta. Puedes deshacerla después con Ctrl+Z.';
+      legend = el('div', { class: 'diff-legend' }, [el('span', { class: 'ins', text: 'añadido' }), el('span', { class: 'del', text: 'quitado' }), el('span', { class: 'muted', text: note })]);
+    }
     UI.modal({
-      title: mode === 'rewrite' ? 'Propuesta de reformulación' : 'Revisa los cambios', width: 760,
+      title: info.review, width: 760,
+      body: el('div', {}, [legend, view]),
+      buttons: [
+        { label: 'Descartar' },
+        mode !== 'punctuate' ? { label: 'Probar otra vez', action: () => { setTimeout(() => this.retry(mode, items, opts), 0); } } : null,
+        { label: 'Aplicar cambios', primary: true, action: () => this.apply(items, results) },
+      ],
+    });
+  },
+
+  // vuelve a pedir otra versión del mismo texto
+  retry(mode, items, opts) {
+    const first = items[0];
+    if (first.range) selectRange(first.range);
+    else if (first.block && document.contains(first.block)) {
+      const last = items[items.length - 1].block;
+      const r = document.createRange();
+      r.setStartBefore(first.block);
+      r.setEndAfter(document.contains(last) ? last : first.block);
+      selectRange(r);
+    }
+    this.polish(mode, opts);
+  },
+
+  // ---------- escribir por mí ----------
+  async write() {
+    if (this.busy) return;
+    if (!(await this.ensureModel())) return;
+    const ask = el('textarea', { rows: 4, placeholder: 'Por ejemplo: un correo para mi profesor pidiendo una semana más para entregar el trabajo de historia.' });
+    const length = el('select', {}, [['short', 'Corto'], ['medium', 'Medio'], ['long', 'Largo']].map(([v, t]) => el('option', { value: v, text: t })));
+    length.value = 'medium';
+    const tone = el('select', {}, [['natural', 'Natural'], ['professional', 'Profesional'], ['casual', 'Casual']].map(([v, t]) => el('option', { value: v, text: t })));
+    const saved = (currentRange() || lastRange)?.cloneRange();
+    let request = null;
+    await UI.modal({
+      title: 'Escribir por mí', width: 520,
       body: el('div', {}, [
-        el('div', { class: 'diff-legend' }, [el('span', { class: 'ins', text: 'añadido' }), el('span', { class: 'del', text: 'quitado' }), el('span', { class: 'muted', text: note })]),
-        diff,
+        el('div', { class: 'field' }, [el('label', { text: '¿Qué quieres que escriba?' }), ask]),
+        el('div', { class: 'field-row' }, [
+          el('div', { class: 'field' }, [el('label', { text: 'Extensión' }), length]),
+          el('div', { class: 'field' }, [el('label', { text: 'Tono' }), tone]),
+        ]),
+        el('p', { class: 'muted small', text: 'El texto se escribe en tu computador con la IA local. Revisa siempre lo que escribe antes de usarlo.' }),
       ]),
-      buttons: [{ label: 'Descartar' }, { label: 'Aplicar cambios', primary: true, action: () => this.apply(items, results) }],
+      buttons: [{ label: 'Cancelar' }, {
+        label: 'Escribir', primary: true,
+        action: () => { if (!ask.value.trim()) { ask.focus(); return false; } request = { text: ask.value.trim(), length: length.value, tone: tone.value }; },
+      }],
+      onOpen: () => ask.focus(),
+    });
+    if (request) this.generateDraft(request, saved);
+  },
+
+  async generateDraft(req, saved) {
+    this.busy = true;
+    UI.modal({
+      title: 'Escribiendo…', width: 420,
+      body: el('div', {}, [el('div', { class: 'muted', text: 'La IA está redactando tu texto. Puede tardar unos segundos.' }), el('div', { class: 'progress indeterminate' }, [el('i')])]),
+      buttons: [{ label: 'Cancelar', action: () => api.ai.cancel() }],
+    });
+    const res = await api.ai.generate({ mode: 'write', text: req.text, length: req.length, tone: req.tone });
+    UI.closeModal();
+    this.busy = false;
+    if (res.error) { UI.alert('La IA no pudo escribir el texto: ' + res.error, 'IA local'); return; }
+    const text = cleanModelOutput(res.text, '').trim();
+    if (!text) { toast('Cancelado'); return; }
+    const view = el('div', { class: 'diff-view', html: escapeHtml(text).replace(/\n/g, '<br>') });
+    UI.modal({
+      title: 'Texto propuesto', width: 720,
+      body: el('div', {}, [el('div', { class: 'diff-legend' }, [el('span', { class: 'muted', text: `Pedido: «${req.text}»` })]), view]),
+      buttons: [
+        { label: 'Descartar' },
+        { label: 'Escribir otro', action: () => { setTimeout(() => this.generateDraft(req, saved), 0); } },
+        {
+          label: 'Insertar en el documento', primary: true, action: () => {
+            if (saved && document.contains(saved.startContainer)) selectRange(saved);
+            const html = text.split(/\n{2,}/).map(p => `<p>${escapeHtml(p.trim()).replace(/\n/g, '<br>')}</p>`).join('');
+            edit(() => exec('insertHTML', html));
+          },
+        },
+      ],
     });
   },
 
@@ -363,6 +461,11 @@ const AI = {
 };
 
 UI.confirmInline = (msg) => Promise.resolve(window.confirm(msg));
+
+// Mayúscula al comienzo de cada frase y de cada párrafo (los modelos pequeños a veces la olvidan)
+function capitalizeSentences(t) {
+  return t.replace(/(^|[.!?…]\s+|\n\s*)([¿¡"«]?)(\p{Ll})/gu, (m, a, b, c) => a + b + c.toLocaleUpperCase());
+}
 
 // Divide un texto largo en trozos de ~n palabras, cortando en finales de frase si es posible
 function splitForModel(text, n) {
@@ -476,7 +579,7 @@ function applyTextDiff(block, oldText, newText) {
   if (!pairs) return;
   // operaciones: [posición en texto original, longitud a borrar, texto a insertar]
   const ops = [];
-  let i = 0, j = 0, pos = 0;
+  let i = 0, j = 0;
   const offs = []; { let p = 0; for (const t of ta) { offs.push(p); p += t.length; } offs.push(p); }
   for (const [pi, pj] of [...pairs, [ta.length, tb.length]]) {
     const delLen = offs[pi] - offs[i];
@@ -484,7 +587,6 @@ function applyTextDiff(block, oldText, newText) {
     if (delLen || ins) ops.push([offs[i], delLen, ins]);
     i = pi + 1; j = pj + 1;
   }
-  void pos;
   for (let k = ops.length - 1; k >= 0; k--) {
     const [start, len, ins] = ops[k];
     let idx = nodes.findIndex((x, q) => start >= x.start && (start < x.start + x.node.data.length || q === nodes.length - 1));

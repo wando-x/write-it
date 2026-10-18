@@ -11,7 +11,7 @@ const HIGHLIGHTS = ['#ffff00', '#00ff00', '#00ffff', '#ff00ff', '#0000ff', '#ff0
 
 const TAB_ORDER = [
   ['home', 'Inicio'], ['insert', 'Insertar'], ['design', 'Diseño'], ['layout', 'Disposición'],
-  ['refs', 'Referencias'], ['review', 'Revisar'], ['view', 'Vista'], ['ai', 'Dictado e IA'], ['fav', 'Favoritos'],
+  ['refs', 'Referencias'], ['review', 'Revisar'], ['view', 'Vista'], ['ai', 'AI'], ['fav', 'Favoritos'],
 ];
 
 const UI = {
@@ -317,7 +317,10 @@ const UI = {
       ];
       case 'ai': return [
         g('Dictado', [L('dictate'), C(this.dictLangSelect(), this.check('dictAutoPolish', 'Ordenar al terminar'))]),
-        g('IA local', [L('aiPolish', { short: 'Ordenar texto' }), L('aiRewrite')]),
+        g('Corregir', [L('aiPolish', { short: 'Ordenar texto' })]),
+        g('Reescribir', [L('aiRewrite', { menu: () => ['rewrite', 'professional', 'casual', 'shorter', 'clearer'].map(m => ({ label: AI_MODES[m].name, run: () => run('aiRewrite', m) })) })]),
+        g('Idioma', [L('aiTranslate', { menu: () => [{ head: 'Traducir a' }, ...TRANSLATE_LANGS.map(([v, t]) => ({ label: t, run: () => run('aiTranslate', v) }))] })]),
+        g('Crear', [L('aiWrite')]),
         g('Configuración', [L('aiModels')]),
       ];
       case 'fav': return [
@@ -850,16 +853,14 @@ const UI = {
     if (si && document.activeElement !== si) si.value = String(f.size).replace('.', ',');
     const sid = currentStyleId();
     $$('.style-tile').forEach(t => t.classList.toggle('checked', t.dataset.style === sid));
-    if (f.block && f.block !== 'p' || true) {
-      const blk = closestBlock((currentRange() || lastRange)?.startContainer);
-      if (blk) {
-        const cs = getComputedStyle(blk);
-        for (const inp of $$('#ribbon [data-para]')) {
-          if (document.activeElement === inp) continue;
-          const k = inp.dataset.para;
-          const px = parseFloat(cs[k]) || 0;
-          inp.value = (k === 'marginLeft' || k === 'marginRight') ? Math.round(px / MM / 10 * 100) / 100 : Math.round(px * 0.75);
-        }
+    const paraInputs = $$('#ribbon [data-para]'); // solo existen en la pestaña Disposición
+    if (paraInputs.length && f.block) {
+      const cs = getComputedStyle(f.block);
+      for (const inp of paraInputs) {
+        if (document.activeElement === inp) continue;
+        const k = inp.dataset.para;
+        const px = parseFloat(cs[k]) || 0;
+        inp.value = (k === 'marginLeft' || k === 'marginRight') ? Math.round(px / MM / 10 * 100) / 100 : Math.round(px * 0.75);
       }
     }
     const inT = inTable();
@@ -949,8 +950,17 @@ const UI = {
 
   // ---------- regla, zoom, vistas y paneles ----------
   renderRuler() { Ruler.render(); },
-  setZoom(z) {
+  // zoom cómodo para leer según el tamaño de la pantalla (la hoja ocupa ~3/4 del ancho)
+  comfortZoom() {
+    const sc = $('#scroller');
+    const pagePx = pageDims().w * MM;
+    const z = (sc.clientWidth - 120) * 0.75 / pagePx * 100;
+    return clamp(Math.round(z / 10) * 10, 100, 160);
+  },
+  saveZoom: debounce((z) => api.setSettings({ zoom: z }).then(s => { Settings = s; }), 800),
+  setZoom(z, { save = true } = {}) {
     this.zoom = clamp(Math.round(z), 25, 300);
+    if (save) this.saveZoom(this.zoom);
     $('#sheet').style.setProperty('--zoom', this.zoom / 100);
     $('#zoom-slider').value = this.zoom;
     $('#zoom-label').textContent = this.zoom + ' %';
@@ -981,13 +991,14 @@ const UI = {
     const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
     const t = document.startViewTransition(apply);
     t.ready.then(() => {
+      // velocidad constante, como una ola en el agua: sin frenazo al final
       document.documentElement.animate(
         { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-        { duration: 750, easing: 'cubic-bezier(.4, 0, .2, 1)', pseudoElement: '::view-transition-new(root)' },
+        { duration: 600, easing: 'linear', pseudoElement: '::view-transition-new(root)' },
       );
-    });
-    // los botones nativos de la ventana cambian cuando la onda llega a ellos
-    t.finished.then(save, save);
+      // los botones nativos de la ventana están junto al interruptor: cambian al empezar
+      save();
+    }, save);
   },
   applyTheme() {
     const sw = $('#theme-switch');

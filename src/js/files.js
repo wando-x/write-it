@@ -124,7 +124,7 @@ function pageCss() {
       boxes += `@${row}-${col} { content: ${parts.join(' "     " ')}; font-family: ${font}; font-size: 9pt; color: #555; white-space: pre; text-align: ${col}; vertical-align: middle; }\n`;
     }
   }
-  return `@page { size: ${w}mm ${h}mm; margin: ${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm; ${Doc.pageColor ? `background: ${Doc.pageColor};` : ''}\n${boxes}}`;
+  return `@page { size: ${w}mm ${h}mm; margin: ${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm; background: ${Doc.pageColor || '#ffffff'};\n${boxes}}`;
 }
 
 // ---------- plantillas ----------

@@ -69,8 +69,21 @@ app.whenReady().then(async () => {
     console.log(ok2 ? 'OK   ordenar texto con IA local' : 'FALLO ordenar texto'); if (!ok2) failed++;
 
     const g2 = await ai.generate({ mode: 'rewrite', text: raw });
+    const ok4 = g2.text.trim() !== raw && /[.,]/.test(g2.text);
+    console.log(ok4 ? 'OK   más pulido cambia el texto' : 'FALLO más pulido no cambió nada'); if (!ok4) failed++;
     if (g2.error) throw new Error(g2.error);
-    t(`IA (reformular): "${g2.text.trim()}"`);
+    t(`IA (más pulido): "${g2.text.trim()}"`);
+
+    for (const [mode, opts] of [['professional', {}], ['casual', {}], ['shorter', {}], ['translate', { lang: 'en' }]]) {
+      const r = await ai.generate({ mode, text: raw, ...opts });
+      if (r.error) throw new Error(r.error);
+      t(`IA (${mode}): "${r.text.trim()}"`);
+    }
+    const w = await ai.generate({ mode: 'write', text: 'un correo corto para mi profesor pidiendo una semana más para entregar el trabajo de historia', length: 'short', tone: 'professional' });
+    if (w.error) throw new Error(w.error);
+    t(`IA (escribir por mí):\n${w.text.trim()}`);
+    const ok3 = /profesor|semana|trabajo/i.test(w.text) && w.text.length > 120;
+    console.log(ok3 ? 'OK   escribir por mí' : 'FALLO escribir por mí'); if (!ok3) failed++;
   } catch (err) {
     console.log('FALLO', err.stack || err.message);
     failed++;

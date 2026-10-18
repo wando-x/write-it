@@ -33,15 +33,63 @@ const PROMPTS = {
         'Hola, ¿cómo estás? Yo bien. La verdad es que ayer fui al cine con mi hermano y estuvo buenísimo. Después fuimos a comer, pero bueno, eso ya es otra historia.'],
     ],
   },
+};
+
+const NO_EXTRA = ' No añadas información ni ideas nuevas y no quites ideas. Conserva el idioma del texto. No expliques nada. Responde únicamente con el texto final, separado en párrafos con una línea en blanco.';
+const STYLE_SAMPLE = 'oye te queria decir que lo del proyecto va bien pero necesitamos mas tiempo para lo del diseño porque hubo problemas con el cliente y bueno ya veremos';
+const STYLE_MODES = {
   rewrite: {
-    system: 'Eres un editor cuidadoso. Reescribe el texto para que quede claro, ordenado y bien puntuado, separado en párrafos con una línea en blanco. '
-      + 'Mantén el mismo tono, el mismo idioma, la misma persona gramatical y las expresiones propias del autor; que siga sonando como él. No añadas información ni ideas nuevas, no quites ideas y no lo vuelvas más formal de lo que es. No expliques nada. Responde únicamente con el texto reescrito.',
-    examples: [
-      ['o sea yo creo que el proyecto va bien pero hay que apurarse con lo del diseño porque si no no llegamos y eso seria un problema la verdad',
-        'O sea, yo creo que el proyecto va bien, pero hay que apurarse con lo del diseño, porque si no, no llegamos. Y eso sería un problema, la verdad.'],
-    ],
+    temperature: 0.3,
+    system: 'Eres un editor cuidadoso. Pule el texto: corrige la puntuación, las tildes y la gramática, quita repeticiones y haz que fluya mejor, manteniendo el tono, la persona gramatical y las expresiones propias del autor; que siga sonando como él.',
+    example: 'Oye, te quería decir que lo del proyecto va bien, pero necesitamos más tiempo para el diseño, porque hubo problemas con el cliente. Y bueno, ya veremos.',
+  },
+  professional: {
+    temperature: 0.3,
+    system: 'Eres un editor profesional. Reescribe el texto con un tono profesional, formal y respetuoso, apropiado para el trabajo, la universidad o un cliente. Usa un vocabulario preciso y frases bien construidas.',
+    example: 'Quería informarte de que el proyecto avanza bien; sin embargo, necesitaremos más tiempo para la parte de diseño debido a algunos inconvenientes con el cliente. Seguiremos evaluando la situación.',
+  },
+  casual: {
+    temperature: 0.4,
+    system: 'Eres un editor. Reescribe el texto con un tono casual, cercano y natural, como si se lo dijeras a un amigo, con buena puntuación y sin perder ninguna idea.',
+    example: 'Oye, te cuento: lo del proyecto va bien, pero vamos a necesitar más tiempo para el diseño, porque hubo líos con el cliente. Ya veremos qué pasa.',
+  },
+  shorter: {
+    temperature: 0.2,
+    system: 'Eres un editor. Reescribe el texto de forma más breve y directa: elimina lo que sobra y las repeticiones, pero conserva todas las ideas importantes y el tono del autor.',
+    example: 'El proyecto va bien, pero necesitamos más tiempo para el diseño por problemas con el cliente.',
+  },
+  clearer: {
+    temperature: 0.2,
+    system: 'Eres un editor. Reescribe el texto para que sea más fácil de entender: frases más cortas, orden lógico y palabras sencillas, manteniendo el tono del autor.',
+    example: 'El proyecto va bien. Pero necesitamos más tiempo para el diseño, porque hubo problemas con el cliente. Ya veremos cómo sigue.',
   },
 };
+const LANG_NAMES = { es: 'español', en: 'inglés', pt: 'portugués', fr: 'francés', it: 'italiano', de: 'alemán' };
+
+function promptFor(mode, { lang, length, tone } = {}) {
+  if (mode === 'punctuate') return { ...PROMPTS.punctuate, temperature: 0 };
+  if (STYLE_MODES[mode]) {
+    const m = STYLE_MODES[mode];
+    return { temperature: m.temperature, system: m.system + NO_EXTRA, examples: [[STYLE_SAMPLE, m.example]] };
+  }
+  if (mode === 'translate') {
+    const to = LANG_NAMES[lang] || 'inglés';
+    return {
+      temperature: 0.1,
+      system: `Eres un traductor profesional. Traduce el texto al ${to} de forma natural y fiel, conservando el sentido, el tono y los párrafos. Las muletillas (como «bueno», «o sea», «pues») tradúcelas por su equivalente natural en ese idioma. No traduzcas nombres propios. No expliques nada. Responde únicamente con la traducción.`,
+    };
+  }
+  if (mode === 'write') {
+    const len = { short: 'breve (uno o dos párrafos)', medium: 'de extensión media (tres o cuatro párrafos)', long: 'extenso y completo (seis párrafos o más)' }[length] || 'de extensión media';
+    const t = { professional: 'profesional y formal', casual: 'casual y cercano', natural: 'natural y claro' }[tone] || 'natural y claro';
+    return {
+      temperature: 0.7,
+      maxTokens: length === 'long' ? 1800 : length === 'short' ? 450 : 900,
+      system: `Eres un asistente de escritura. Escribe el texto que te pida el usuario, ${len}, con un tono ${t}, bien redactado y con buena puntuación, separado en párrafos con una línea en blanco. Escribe en el mismo idioma en que te lo piden, salvo que te indiquen otro. No añadas títulos, notas ni explicaciones: responde únicamente con el texto pedido.`,
+    };
+  }
+  return { ...PROMPTS.punctuate, temperature: 0 };
+}
 
 class AIEngine {
   constructor({ userData, getSettings, setSettings, broadcast }) {
@@ -189,7 +237,7 @@ class AIEngine {
   async transcribe({ audio, lang }) {
     const st = this.status();
     const m = WHISPER_MODELS.find(x => x.id === st.selected.whisper);
-    if (!m || !this.whisperReady(m)) return { error: 'Primero descarga un modelo de dictado en Dictado e IA › Modelos de IA.' };
+    if (!m || !this.whisperReady(m)) return { error: 'Primero descarga un modelo de dictado en AI › Modelos de IA.' };
     return this.serial(async () => {
       if (!this.asr || this.asrId !== m.id) {
         const t = await this.transformers();
@@ -239,25 +287,25 @@ class AIEngine {
     this.context = null; this.model = null; this.modelId = null;
   }
 
-  async generate({ mode, text }) {
+  async generate({ mode, text, lang, length, tone }) {
     const st = this.status();
     const m = LLM_MODELS.find(x => x.id === st.selected.llm);
-    if (!m || !fs.existsSync(this.llmPath(m))) return { error: 'Primero descarga un modelo de IA en Dictado e IA › Modelos de IA.' };
-    const p = PROMPTS[mode] || PROMPTS.punctuate;
+    if (!m || !fs.existsSync(this.llmPath(m))) return { error: 'Primero descarga un modelo de IA en AI › Modelos de IA.' };
+    const p = promptFor(mode, { lang, length, tone });
     return this.serial(async () => {
       await this.loadLlm(m);
       const { LlamaChatSession } = await import('node-llama-cpp');
       const seq = this.context.getSequence();
       const session = new LlamaChatSession({ contextSequence: seq, systemPrompt: p.system });
       const history = [{ type: 'system', text: p.system }];
-      for (const [u, a] of p.examples) history.push({ type: 'user', text: u }, { type: 'model', response: [a] });
+      for (const [u, a] of p.examples || []) history.push({ type: 'user', text: u }, { type: 'model', response: [a] });
       session.setChatHistory(history);
       this.abort = new AbortController();
       try {
         const words = text.split(/\s+/).length;
         const answer = await session.prompt(text, {
-          temperature: mode === 'rewrite' ? 0.3 : 0,
-          maxTokens: Math.min(3000, Math.round(words * 3) + 80),
+          temperature: p.temperature,
+          maxTokens: p.maxTokens || Math.min(3000, Math.round(words * 3) + 80),
           signal: this.abort.signal,
           stopOnAbortSignal: true,
         });
@@ -272,11 +320,20 @@ class AIEngine {
 
   cancel() { if (this.abort) this.abort.abort(); }
 
-  // una tarea de IA a la vez
+  // una tarea de IA a la vez; los modelos se liberan de la memoria tras 5 min sin uso
   serial(fn) {
+    clearTimeout(this.idleTimer);
     const run = this.queue.then(fn, fn);
     this.queue = run.catch(() => {});
+    this.queue.then(() => { clearTimeout(this.idleTimer); this.idleTimer = setTimeout(() => this.releaseIdle(), 5 * 60 * 1000); });
     return run.catch(err => ({ error: err.message || String(err) }));
+  }
+
+  releaseIdle() {
+    this.queue = this.queue.then(async () => {
+      await this.unloadLlm();
+      if (this.asr) { try { await this.asr.dispose(); } catch { /* */ } this.asr = null; this.asrId = null; }
+    });
   }
 }
 

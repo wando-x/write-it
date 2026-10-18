@@ -348,6 +348,9 @@ body.dark #ruler { background: #d5d5d2; }
   tab-size: 1.25cm;
   overflow-wrap: break-word;
   caret-color: #000;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
 }
 #doc.cols-2 { column-count: 2; column-gap: 1.25cm; }
 #doc.cols-3 { column-count: 3; column-gap: 1.25cm; }
@@ -717,7 +720,7 @@ button.sb-item:hover { background: var(--hover); }
 .print-facts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
 .print-facts div { display: flex; flex-direction: column; }
 .print-facts b { font-size: 11px; color: var(--muted); font-weight: 600; }
-.print-preview { flex: 1; background: var(--canvas); border-radius: 10px; overflow: hidden; display: grid; place-items: center; box-shadow: inset 0 0 0 .5px var(--line-2); }
+.print-preview { flex: 1; background: #525659; border-radius: 10px; overflow: hidden; display: grid; place-items: center; color: #d0d0d0; }
 .print-preview iframe { width: 100%; height: 100%; border: 0; }
 .info-cols { display: flex; gap: 48px; flex-wrap: wrap; }
 .info-grid { display: grid; grid-template-columns: 120px 260px; gap: 10px 16px; align-items: center; }
@@ -796,7 +799,7 @@ body.dark .badge { color: #6fd38a; }
 
 /* ---------- impresión / PDF ---------- */
 @media print {
-  html, body { height: auto; overflow: visible; background: var(--page-color, #fff) !important; display: block; }
+  html, body { height: auto; overflow: visible; background: var(--page-color, #fff) !important; display: block; color-scheme: light; }
   body > *:not(#workspace):not(#print-watermark) { display: none !important; }
   #workspace { display: block; background: none; }
   .sidepane, #ruler-wrap, #page-layer, .hf { display: none !important; }
@@ -807,7 +810,7 @@ body.dark .badge { color: #6fd38a; }
   #doc .page-break { border: 0; margin: 0; }
   #doc .page-break::after { display: none; }
   #doc .column-break { border: 0; margin: 0; }
-  #doc .comment { background: none; border: 0; }
+  #doc .comment, #doc .comment.active { background: none !important; border: 0 !important; }
   #doc .toc:hover { outline: 0; }
   #doc img.selected { outline: 0; }
   #doc td.cell-selected { box-shadow: none; }
@@ -848,3 +851,6 @@ body.dark .ts-moon { opacity: 1; }
 /* transición en onda: la vista nueva se revela con un círculo que crece */
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 ::view-transition-new(root) { z-index: 2; }
+
+.progress.indeterminate i { width: 35%; animation: indet 1.2s ease-in-out infinite; }
+@keyframes indet { from { transform: translateX(-100%); } to { transform: translateX(290%); } }

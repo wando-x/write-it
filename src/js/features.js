@@ -517,6 +517,13 @@ const Notes = {
     const box = d.querySelector('.footnotes');
     refs.forEach((r, i) => { if (r.textContent !== String(i + 1)) r.textContent = String(i + 1); });
     if (!box) return;
+    const stray = Array.from(box.children).filter(c => !c.matches('ol'));
+    if (stray.length || box.nextSibling) {
+      const off = getSelOffsets();
+      box.before(...stray);
+      d.appendChild(box);
+      setSelOffsets(off);
+    }
     const ol = box.querySelector('ol') || box.appendChild(el('ol', { class: 'footnotes-list' }));
     const ids = refs.map(r => r.dataset.fn);
     for (const li of Array.from(ol.children)) if (!ids.includes(li.dataset.fn)) li.remove();

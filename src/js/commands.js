@@ -186,7 +186,9 @@ cmd('imgDelete', { label: 'Eliminar imagen', icon: 'delete', run: () => Images.r
 // ---------- dictado e IA local ----------
 cmd('dictate', { label: 'Dictar', icon: 'mic', kw: 'voz hablar whisper micrófono', run: () => Dictation.toggle(), state: () => Dictation.active });
 cmd('aiPolish', { label: 'Ordenar texto', icon: 'sparkle', kw: 'ia puntuación comas corregir reestructurar', run: () => AI.polish('punctuate') });
-cmd('aiRewrite', { label: 'Reformular', icon: 'wrap', kw: 'ia reescribir mejorar claridad', run: () => AI.polish('rewrite') });
+cmd('aiRewrite', { label: 'Reescribir', icon: 'wrap', kw: 'ia reescribir pulir mejorar profesional casual corto claro tono', run: (m) => AI.polish(m || 'rewrite') });
+cmd('aiTranslate', { label: 'Traducir', icon: 'globe', kw: 'ia traducir idioma inglés', run: (lang) => AI.polish('translate', { lang: lang || 'en' }) });
+cmd('aiWrite', { label: 'Escribir por mí', icon: 'sparkle', kw: 'ia redactar generar escribir correo carta', run: () => AI.write() });
 cmd('aiModels', { label: 'Modelos de IA', icon: 'settings', kw: 'descargar whisper ia local', run: () => AI.modelsDialog() });
 
 // ---------- atajos de teclado ----------

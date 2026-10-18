@@ -7,7 +7,10 @@ window.runSelftest = async function () {
   const wait = (ms) => new Promise(r => setTimeout(r, ms));
   const check = (name, ok, info) => { results.push(`${ok ? 'OK  ' : 'FALLO'} ${name}${info ? ' — ' + info : ''}`); if (!ok) failed++; };
   const safe = async (name, fn) => { try { await fn(); } catch (err) { check(name, false, err.message + '\n' + err.stack); } };
-  const caretEnd = () => { const r = document.createRange(); r.selectNodeContents(docEl()); r.collapse(false); selectRange(r); focusDoc(); };
+  const caretEnd = () => {
+    const blocks = Array.from(docEl().children).filter(n => !n.matches('.footnotes'));
+    const r = document.createRange(); r.selectNodeContents(blocks[blocks.length - 1] || docEl()); r.collapse(false); selectRange(r); focusDoc();
+  };
   const selectText = (txt) => {
     const ms = Find.rangesFor(txt, { matchCase: true });
     if (!ms.length) throw new Error('no se encontró: ' + txt);
@@ -228,6 +231,8 @@ window.runSelftest = async function () {
     UI.showPane('navpane', false);
     Backstage.open('home'); await wait(300);
     await api.selftest.shot('12-archivo');
+    Backstage.open('print'); await wait(3500);
+    await api.selftest.shot('21-imprimir');
     Backstage.open('saveas'); await wait(80);
     await api.selftest.shot('13-guardar-como');
     Backstage.close();
