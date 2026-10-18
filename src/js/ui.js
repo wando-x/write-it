@@ -38,6 +38,8 @@ const UI = {
       { label: 'Acerca de Write It', icon: 'info', run: () => Backstage.open('about') },
     ], { align: 'right' }));
     $('#doc-title').addEventListener('click', () => Backstage.open('info'));
+    $('#theme-switch').addEventListener('mousedown', (e) => e.preventDefault());
+    $('#theme-switch').addEventListener('click', () => this.toggleTheme());
     $$('[data-close-pane]').forEach(b => b.addEventListener('click', () => this.showPane(b.dataset.closePane, false)));
     $$('#navpane [data-navtab]').forEach(b => b.addEventListener('click', () => Nav.setTab(b.dataset.navtab)));
     $('#nav-search').addEventListener('input', debounce(() => Nav.render(), 200));
@@ -967,7 +969,29 @@ const UI = {
   isDark() {
     return Settings.theme === 'dark' || (Settings.theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
   },
+  // Cambia de tema con una onda que se expande desde el interruptor
+  toggleTheme() {
+    const sw = $('#theme-switch');
+    const r = sw.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const next = this.isDark() ? 'light' : 'dark';
+    const apply = () => { Settings.theme = next; this.applyTheme(); this.updateState(true); };
+    const save = () => api.setSettings({ theme: next }).then(s => { Settings = s; });
+    if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { apply(); save(); return; }
+    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const t = document.startViewTransition(apply);
+    t.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+        { duration: 750, easing: 'cubic-bezier(.4, 0, .2, 1)', pseudoElement: '::view-transition-new(root)' },
+      );
+    });
+    // los botones nativos de la ventana cambian cuando la onda llega a ellos
+    t.finished.then(save, save);
+  },
   applyTheme() {
+    const sw = $('#theme-switch');
+    if (sw) sw.setAttribute('aria-checked', String(this.isDark()));
     document.body.classList.toggle('dark', this.isDark());
     const a = Settings.accent || '#2b5797';
     const root = document.documentElement.style;

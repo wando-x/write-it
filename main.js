@@ -71,7 +71,7 @@ const windows = new Map(); // id -> { win, dirty, name, docId, ctx }
 
 function titleBarColors() {
   const dark = settings.theme === 'dark' || (settings.theme === 'system' && nativeTheme.shouldUseDarkColors);
-  return dark ? { color: '#1d1d1f', symbolColor: '#e8e8e8', height: 40 }
+  return dark ? { color: '#262624', symbolColor: '#f5f4ef', height: 40 }
     : { color: '#f4f3f0', symbolColor: '#1d1d1f', height: 40 };
 }
 

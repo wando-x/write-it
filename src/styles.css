@@ -26,20 +26,20 @@
 }
 
 body.dark {
-  --bg: #1d1d1f;
-  --toolbar: #242426;
-  --canvas: #141415;
-  --panel: #2a2a2c;
-  --text: #ececee;
-  --text-2: #c4c4c8;
-  --muted: #8e8e93;
+  --bg: #262624;
+  --toolbar: #2c2b29;
+  --canvas: #1f1e1d;
+  --panel: #30302e;
+  --text: #f5f4ef;
+  --text-2: #c7c5bc;
+  --muted: #9b998f;
   --line: rgba(255, 255, 255, .08);
-  --line-2: rgba(255, 255, 255, .16);
-  --hover: rgba(255, 255, 255, .06);
+  --line-2: rgba(255, 255, 255, .15);
+  --hover: rgba(255, 255, 255, .065);
   --press: rgba(255, 255, 255, .11);
-  --field: #1f1f21;
-  --shadow: 0 12px 34px rgba(0, 0, 0, .5), 0 0 0 .5px rgba(255, 255, 255, .1);
-  --sheet-shadow: 0 0 0 .5px rgba(0, 0, 0, .4), 0 6px 24px rgba(0, 0, 0, .45);
+  --field: #262624;
+  --shadow: 0 12px 34px rgba(0, 0, 0, .45), 0 0 0 .5px rgba(255, 255, 255, .1);
+  --sheet-shadow: 0 0 0 .5px rgba(0, 0, 0, .35), 0 6px 24px rgba(0, 0, 0, .35);
   color-scheme: dark;
 }
 
@@ -823,3 +823,28 @@ body.dark .badge { color: #6fd38a; }
 /* foco visible del teclado con el color de acento */
 :focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent); outline-offset: 1px; }
 #doc:focus-visible, .hf:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
+
+/* ---------- interruptor de tema ---------- */
+.theme-switch {
+  width: 46px; height: 26px; border: 0; border-radius: 13px; padding: 0; margin-left: 10px; flex: none;
+  background: rgba(0, 0, 0, .1); position: relative; -webkit-app-region: no-drag;
+  transition: background .25s;
+}
+.theme-switch:hover { background: rgba(0, 0, 0, .15); }
+body.dark .theme-switch { background: rgba(255, 255, 255, .14); }
+body.dark .theme-switch:hover { background: rgba(255, 255, 255, .2); }
+.ts-knob {
+  position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); display: grid; place-items: center;
+  transition: transform .25s ease, background .25s;
+}
+body.dark .ts-knob { transform: translateX(20px); background: #f5f4ef; }
+.ts-knob > span { grid-area: 1 / 1; display: grid; place-items: center; color: #3d3d3a; transition: opacity .2s; }
+.ts-knob svg { width: 13px; height: 13px; }
+.ts-moon { opacity: 0; }
+body.dark .ts-sun { opacity: 0; }
+body.dark .ts-moon { opacity: 1; }
+
+/* transición en onda: la vista nueva se revela con un círculo que crece */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { z-index: 2; }

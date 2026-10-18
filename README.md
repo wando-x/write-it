@@ -14,7 +14,7 @@
 ## Descargar e instalar
 
 1. Ve a la sección [**Releases**](../../releases) de este repositorio.
-2. Descarga **`Write-It-Setup-1.0.0.exe`** (instalador) o **`Write-It-Portable-1.0.0.exe`** (no necesita instalación, se abre directamente).
+2. Descarga **`Write-It-Setup-1.0.1.exe`** (instalador) o **`Write-It-Portable-1.0.1.exe`** (no necesita instalación, se abre directamente).
 3. Ábrelo. Si Windows muestra «Windows protegió su PC», pulsa **Más información → Ejecutar de todas formas**. Aparece porque la app no está firmada con un certificado de pago; el código es abierto y puedes revisarlo aquí mismo.
 
 Requisitos: Windows 10 u 11 de 64 bits. Para la IA se recomiendan 8 GB de RAM (funciona con 4 GB usando los modelos ligeros).
@@ -47,7 +47,8 @@ Requisitos: Windows 10 u 11 de 64 bits. Para la IA se recomiendan 8 GB de RAM (f
 - Autoguardado y recuperación de documentos si la app se cierra de golpe.
 
 **Vista**
-- Modo de lectura, modo enfoque (sin distracciones), tema claro y oscuro, zoom.
+- Modo de lectura, modo enfoque (sin distracciones), zoom.
+- Interruptor de tema claro / oscuro arriba a la derecha (oscuro cálido, no negro puro), con una transición en onda.
 - Pestaña **Favoritos** con tus comandos más usados (se personaliza en Opciones).
 
 ## Dictado por voz

@@ -152,10 +152,7 @@ cmd('zoomPage', { label: 'Una página', icon: 'pageFit', run: () => UI.zoomFit('
 cmd('zoomWidth', { label: 'Ancho de página', icon: 'width', run: () => UI.zoomFit('width') });
 cmd('zoomDialog', { label: 'Zoom…', icon: 'zoomIn', run: () => UI.zoomDialog() });
 cmd('darkMode', {
-  label: 'Tema oscuro', icon: 'dark', kw: 'modo noche', run: async () => {
-    Settings = await api.setSettings({ theme: UI.isDark() ? 'light' : 'dark' });
-    UI.applyTheme();
-  }, state: () => UI.isDark(),
+  label: 'Tema oscuro', icon: 'dark', kw: 'modo noche claro', run: () => UI.toggleTheme(), state: () => UI.isDark(),
 });
 cmd('fullscreen', { label: 'Pantalla completa', icon: 'fullscreen', run: () => api.toggleFullscreen() });
 cmd('toggleRibbon', { label: 'Mostrar u ocultar la cinta', icon: 'chevronUp', run: () => UI.toggleRibbon() });

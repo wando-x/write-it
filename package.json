@@ -1,7 +1,7 @@
 {
   "name": "write-it",
   "productName": "Write It",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Write It: procesador de textos de escritorio con dictado por voz e IA local. Open source.",
   "main": "main.js",
   "author": "Fabrizzio",

@@ -45,7 +45,7 @@ const MAP = {
   focus: 'full_screen_minimize', pageFit: 'document_one_page', width: 'document_width',
   textDir: 'text_direction_vertical', template: 'document_one_page_multiple', person: 'person',
   merge: 'table_cells_merge', print2: 'document_print', globe: 'globe', shapes: 'shapes',
-  mic: 'mic', arrowLeft: 'arrow_left', stop: 'stop',
+  mic: 'mic', arrowLeft: 'arrow_left', stop: 'stop', sun: 'weather_sunny', moon: 'weather_moon',
   keyboard: 'keyboard', lightbulb: 'lightbulb', sparkle: 'sparkle', calendarDate: 'calendar_date',
 };
 
