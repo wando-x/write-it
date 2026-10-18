@@ -19,7 +19,7 @@ const RECOVERY_DIR = path.join(USER_DATA, 'recovery');
 const DEFAULT_SETTINGS = {
   theme: 'light',            // light | dark | system
   accent: '#2b5797',
-  author: 'Fabrizzio',
+  author: (os.userInfo().username || 'Autor').replace(/^./, c => c.toUpperCase()),
   fontFamily: 'Calibri',
   fontSize: 11,
   lineHeight: 1.15,
